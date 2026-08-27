@@ -1,0 +1,21 @@
+services:
+  campaign-investigator:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      # Named volume, not a bind mount to a host folder -- this persists
+      # the SQLite database (and its saved investigations/embeddings)
+      # across container restarts and rebuilds, without depending on any
+      # specific host filesystem path. Run `docker compose down -v` if you
+      # ever want to wipe it and start from a fresh seeded database.
+      - campaign_data:/app/data
+    environment:
+      # Only needed if you're running agent_llm.py's real LLM calls from
+      # inside the container. The rule-based agent.py used by dashboard.py
+      # doesn't need this at all -- it's here for when you wire the LLM
+      # version into the dashboard.
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+volumes:
+  campaign_data:

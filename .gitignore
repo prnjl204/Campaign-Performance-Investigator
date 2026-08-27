@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+data/campaigns.db
+eval/eval_campaigns.db
+.DS_Store

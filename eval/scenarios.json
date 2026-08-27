@@ -1,0 +1,58 @@
+[
+  {
+    "campaign_id": 17,
+    "name": "Eval - Device Mobile Severe",
+    "ground_truth_dimension": "device",
+    "ground_truth_value": "mobile",
+    "ground_truth_changepoint": "2026-06-16"
+  },
+  {
+    "campaign_id": 18,
+    "name": "Eval - Device Desktop Severe",
+    "ground_truth_dimension": "device",
+    "ground_truth_value": "desktop",
+    "ground_truth_changepoint": "2026-06-11"
+  },
+  {
+    "campaign_id": 19,
+    "name": "Eval - Device Tablet Moderate",
+    "ground_truth_dimension": "device",
+    "ground_truth_value": "tablet",
+    "ground_truth_changepoint": "2026-06-21"
+  },
+  {
+    "campaign_id": 20,
+    "name": "Eval - Geo TX Severe",
+    "ground_truth_dimension": "geo",
+    "ground_truth_value": "TX",
+    "ground_truth_changepoint": "2026-06-13"
+  },
+  {
+    "campaign_id": 21,
+    "name": "Eval - Geo CA Moderate",
+    "ground_truth_dimension": "geo",
+    "ground_truth_value": "CA",
+    "ground_truth_changepoint": "2026-06-19"
+  },
+  {
+    "campaign_id": 22,
+    "name": "Eval - Geo FL Severe Early",
+    "ground_truth_dimension": "geo",
+    "ground_truth_value": "FL",
+    "ground_truth_changepoint": "2026-06-09"
+  },
+  {
+    "campaign_id": 23,
+    "name": "Eval - Healthy Control A",
+    "ground_truth_dimension": null,
+    "ground_truth_value": null,
+    "ground_truth_changepoint": null
+  },
+  {
+    "campaign_id": 24,
+    "name": "Eval - Healthy Control B",
+    "ground_truth_dimension": null,
+    "ground_truth_value": null,
+    "ground_truth_changepoint": null
+  }
+]
