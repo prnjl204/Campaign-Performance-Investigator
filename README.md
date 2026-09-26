@@ -153,14 +153,3 @@ python eval/run_evaluation.py
 export GEMINI_API_KEY=your_key_here   # PowerShell: $env:GEMINI_API_KEY="your_key_here"
 python src/agent_gemini.py
 ```
-
-## What I'd build next
-
-- Multi-dimensional anomaly detection (e.g. mobile *and* a specific geo
-together)
-- Real embedding-based memory (Voyage AI or OpenAI)
-- Slack/email drafting for approved findings (still requiring a human
-send action, never automatic)
-- Run `agent_gemini.py` through the full eval suite (not just the one
-scenario above) to directly quantify what real reasoning adds over
-fixed heuristics
