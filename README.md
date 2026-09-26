@@ -4,7 +4,7 @@ An agent that investigates *why* a marketing campaign is underperforming —
 not a chatbot, not a dashboard. Given a campaign that's over its target
 CPA, it plans an investigation, queries the data itself, adapts its
 approach when an initial query is inconclusive, validates its own
-conclusion, and hands a marketing analyst a evidence-backed hypothesis to
+conclusion, and hands a marketing analyst an evidence-backed hypothesis to
 approve — it never changes spend, pauses a campaign, or contacts anyone
 on its own.
 
@@ -25,7 +25,7 @@ evidence, so the analyst's time goes to judgment, not query-writing.
 
 ## Architecture
 
-```mermaid
+```
 flowchart TD
     A[Underperforming campaign flagged] --> B[Agent: check device breakdown]
     B --> C{Outlier found?}
@@ -45,35 +45,35 @@ flowchart TD
 ## What makes this genuinely agentic (not just a script)
 
 - **Plans multi-step**: decides which dimension to check first, and
-  whether to keep digging based on what it finds
+whether to keep digging based on what it finds
 - **Adapts to inconclusive results**: when a full-range average hides an
-  anomaly (diluted by healthy days before the issue started), it narrows
-  the time window and retries — this exact gap was found and fixed via
-  the evaluation suite (see `eval/EVALUATION_REPORT.md`)
+anomaly (diluted by healthy days before the issue started), it narrows
+the time window and retries — this exact gap was found and fixed via
+the evaluation suite (see `eval/EVALUATION_REPORT.md`)
 - **Chooses between tools**: device breakdown, geo breakdown, time trend,
-  and vector memory search are all available; which ones get used depends
-  on what earlier steps found
+and vector memory search are all available; which ones get used depends
+on what earlier steps found
 - **Validates its own conclusion** before finalizing, rather than
-  reporting the first pattern it notices
+reporting the first pattern it notices
 - **Uses memory**: retrieves similar past investigations via a vector
-  store, so recurring patterns get recognized instead of re-investigated
-  from scratch
+store, so recurring patterns get recognized instead of re-investigated
+from scratch
 - **Human-in-the-loop by design**: the agent's only possible outputs are
-  a report and a database write to its own findings table — it has no
-  code path that can change a campaign, spend, or notify anyone
+a report and a database write to its own findings table — it has no
+code path that can change a campaign, spend, or notify anyone
 
 ## Tech stack
 
-| Layer | Technology | Why |
-|---|---|---|
-| Data | SQLite (schema in `src/schema.sql`) | Real multi-table relational data — campaigns, daily metrics, investigations, audit trail, embeddings |
-| Agent orchestration | Hand-rolled Python state machine (`src/agent.py`) | No network access in dev sandbox to install LangGraph — this implements the same plan/act/observe/adapt idea directly; `src/agent_llm.py` has a real Anthropic tool-calling version to run with API access |
-| LLM integration | Anthropic API, tool/function calling (`src/agent_llm.py`) | Real model-driven investigation instead of fixed rules |
-| Memory / RAG | TF-IDF + cosine similarity (`src/memory.py`) | Fully local, zero-dependency vector search; swap `_embed_texts()` for a real embedding API to upgrade |
-| Dashboard | Streamlit (`src/dashboard.py`) | Shows the live investigation trace + human approval flow |
-| Observability | Structured JSON logging (`src/observability.py`) | Every SQL query timed and logged, separate from the business-record audit trail |
-| Deployment | Docker + docker-compose | Self-seeding container, persistent named volume for the database |
-| Evaluation | Custom eval harness (`eval/`) | 8 synthetic ground-truth scenarios, scored for dimension/value accuracy and false positive rate |
+| Layer               | Technology                                                  | Why                                                                                                                                                                       |
+| -------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Data                 | SQLite (schema in `src/schema.sql`)                          | Real multi-table relational data — campaigns, daily metrics, investigations, audit trail, embeddings                                                                     |
+| Agent orchestration  | Hand-rolled Python state machine (`src/agent.py`)             | No network access in dev sandbox to install LangGraph — this implements the same plan/act/observe/adapt idea directly; `src/agent_gemini.py` has a real Gemini function-calling version to run with API access |
+| LLM integration      | Google Gemini API, function calling (`src/agent_gemini.py`)   | Real model-driven investigation instead of fixed rules                                                                                                                    |
+| Memory / RAG         | TF-IDF + cosine similarity (`src/memory.py`)                  | Fully local, zero-dependency vector search; swap `_embed_texts()` for a real embedding API to upgrade                                                                    |
+| Dashboard            | Streamlit (`src/dashboard.py`)                                | Shows the live investigation trace + human approval flow                                                                                                                  |
+| Observability        | Structured JSON logging (`src/observability.py`)              | Every SQL query timed and logged, separate from the business-record audit trail                                                                                          |
+| Deployment           | Docker + docker-compose                                       | Self-seeding container, persistent named volume for the database                                                                                                         |
+| Evaluation           | Custom eval harness (`eval/`)                                 | 8 synthetic ground-truth scenarios, scored for dimension/value accuracy and false positive rate                                                                          |
 
 ## Evaluation results
 
@@ -86,6 +86,18 @@ fix, and known limitations are in **`eval/EVALUATION_REPORT.md`**. That
 file is worth reading before an interview: it documents a real gap found
 by testing, not just a final number.
 
+**The Gemini-driven agent has also been run end-to-end** against the
+seeded demo data. Given a campaign flagged as over target CPA, it
+independently planned and executed an 8-step investigation — checking
+the campaign date range, device breakdown, geo breakdown, overall time
+trend, then per-device time trends, and finally a device breakdown
+filtered to the second half of the month — before producing a hypothesis:
+a mobile-specific conversion-rate collapse (from ~6.0% to ~1.0%) starting
+on a specific date, with desktop and tablet performance staying stable
+throughout. It returned this with a 0.98 confidence score and the
+supporting evidence numbers, matching the anomaly planted in the seed
+data.
+
 ## Project structure
 
 ```
@@ -96,7 +108,7 @@ campaign-investigator/
 │   ├── sql_tool.py                 # read-only, audited SQL execution tool
 │   ├── detect_underperformance.py  # flags campaigns over target CPA
 │   ├── agent.py                    # deterministic investigation loop
-│   ├── agent_llm.py                # real Anthropic tool-calling version
+│   ├── agent_gemini.py             # real Gemini function-calling version
 │   ├── persistence.py              # saves/loads investigations + human review
 │   ├── memory.py                   # vector memory / RAG over past investigations
 │   ├── observability.py            # structured JSON logging
@@ -113,12 +125,15 @@ campaign-investigator/
 ## Running it
 
 **Quickest (Docker):**
+
 ```
 docker compose up --build
 ```
+
 Open `http://localhost:8501`.
 
 **Locally:**
+
 ```
 pip install -r requirements.txt
 python src/generate_seed_data.py    # only needed once
@@ -126,36 +141,40 @@ streamlit run src/dashboard.py
 ```
 
 **Run the evaluation suite:**
+
 ```
 python eval/generate_eval_dataset.py
 python eval/run_evaluation.py
 ```
 
-**Run the real LLM-driven agent** (needs an Anthropic API key):
+**Run the real LLM-driven agent** (needs a Gemini API key):
+
 ```
-export ANTHROPIC_API_KEY=your_key_here
-python src/agent_llm.py
+export GEMINI_API_KEY=your_key_here   # PowerShell: $env:GEMINI_API_KEY="your_key_here"
+python src/agent_gemini.py
 ```
 
 ## Known limitations
 
 - The rule-based `agent.py` only tests one failure pattern: a sustained
-  conversion-rate drop isolated to one device or geo segment. It hasn't
-  been evaluated against gradual declines or multi-dimensional anomalies.
+conversion-rate drop isolated to one device or geo segment. It hasn't
+been evaluated against gradual declines or multi-dimensional anomalies.
 - Vector memory uses TF-IDF, not true semantic embeddings, due to no
-  network access during development — see the note in `memory.py` for
-  the upgrade path.
-- `agent_llm.py`'s real API-driven behavior hasn't been run end-to-end
-  in this environment (no network access) — the deterministic version is
-  what's been fully tested; the LLM version should be run and observed
-  on your own machine before treating it as demo-ready.
+network access during development — see the note in `memory.py` for
+the upgrade path.
+- `agent_gemini.py` has been validated on one seeded scenario (a clean,
+isolated mobile anomaly) rather than run through the full 8-scenario eval
+suite used to score `agent.py` — broader validation across the same
+ground-truth set would strengthen the comparison between the rule-based
+and LLM-driven approaches.
 
 ## What I'd build next
 
 - Multi-dimensional anomaly detection (e.g. mobile *and* a specific geo
-  together)
+together)
 - Real embedding-based memory (Voyage AI or OpenAI)
 - Slack/email drafting for approved findings (still requiring a human
-  send action, never automatic)
-- A/B testing the LLM-driven agent against the rule-based one on the same
-  eval suite, to quantify what real reasoning adds over fixed heuristics
+send action, never automatic)
+- Run `agent_gemini.py` through the full eval suite (not just the one
+scenario above) to directly quantify what real reasoning adds over
+fixed heuristics
