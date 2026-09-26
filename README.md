@@ -154,20 +154,6 @@ export GEMINI_API_KEY=your_key_here   # PowerShell: $env:GEMINI_API_KEY="your_ke
 python src/agent_gemini.py
 ```
 
-## Known limitations
-
-- The rule-based `agent.py` only tests one failure pattern: a sustained
-conversion-rate drop isolated to one device or geo segment. It hasn't
-been evaluated against gradual declines or multi-dimensional anomalies.
-- Vector memory uses TF-IDF, not true semantic embeddings, due to no
-network access during development — see the note in `memory.py` for
-the upgrade path.
-- `agent_gemini.py` has been validated on one seeded scenario (a clean,
-isolated mobile anomaly) rather than run through the full 8-scenario eval
-suite used to score `agent.py` — broader validation across the same
-ground-truth set would strengthen the comparison between the rule-based
-and LLM-driven approaches.
-
 ## What I'd build next
 
 - Multi-dimensional anomaly detection (e.g. mobile *and* a specific geo
